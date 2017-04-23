@@ -40,8 +40,6 @@ def callback(ch, method, properties, body):
         elif action == "update":
             schedule.update(id, zone, duration, time, days)
 
-        print "-----------------------------"
-
 connection = pika.BlockingConnection(pika.ConnectionParameters(host=configuration.rmq_host))
 channel = connection.channel()
 channel.queue_declare(queue=configuration.id)
