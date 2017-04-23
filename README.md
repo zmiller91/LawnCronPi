@@ -2,7 +2,7 @@ ASSUMPTIONS
 -----------
 python 2.7 is installed
 
-```shell
+```bash
 pi@raspberrypi:~/LawnCronPi $ python --version
   > Python 2.7.9
 ```
@@ -10,7 +10,7 @@ pi@raspberrypi:~/LawnCronPi $ python --version
 INSTALL DEPENDENCIES
 --------------------
 
-```shell
+```bash
 # Too much output for these next three
 sudo apt-get update
 sudo apt-get install rabbitmq-server
