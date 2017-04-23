@@ -4,6 +4,9 @@ import pika
 import configuration
 import json
 import schedule
+from datetime import datetime
+
+#TODO: clean up pids
 
 def parseRequest(request):
 
@@ -12,6 +15,12 @@ def parseRequest(request):
 
     except ValueError:
         return False
+
+
+def log(message):
+    status_file = open("/tmp/lawn-cron-log", "w")
+    status_file.write(message)
+    status_file.close()
 
 def callback(ch, method, properties, body):
 
@@ -32,10 +41,17 @@ def callback(ch, method, properties, body):
             schedule.delete(id)
 
         elif action == "play":
+            # execute command and don't block
             schedule.play(id, zone, duration)
 
         elif action == "stop":
-            schedule.stop(id)
+            message = json.dumps({'action': 'stop', 'ts': str(datetime.now())})
+            local_connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
+            schedule_channel = local_connection.channel()
+            schedule_channel.queue_declare(queue=zone)
+            schedule_channel.basic_publish(exchange='', routing_key=zone, body=message)
+            log(message)
+            local_connection.close()
 
         elif action == "update":
             schedule.update(id, zone, duration, time, days)
