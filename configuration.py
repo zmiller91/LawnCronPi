@@ -1,4 +1,4 @@
 __author__ = 'zmiller'
 
-id = "3b6a1ab2"
-rmq_host = "localhost"
+id = "5720f3c0"
+rmq_host = "lawncron.com"
