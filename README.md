@@ -9,55 +9,73 @@ python 2.7 is installed
 INSTALL DEPENDENCIES
 --------------------
 
-    # Too much output for these next three
-    sudo apt-get update
-    sudo apt-get install rabbitmq-server
-    sudo apt-get install python-crontab
+```bash
+# Too much output for these next three
+sudo apt-get update
+sudo apt-get install rabbitmq-server
+sudo apt-get install python-crontab
 
-    # Download pip
-    pi@raspberrypi:~/ $ wget https://bootstrap.pypa.io/get-pip.py
-      > --2017-04-23 16:18:47--  https://bootstrap.pypa.io/get-pip.py
-      > Resolving bootstrap.pypa.io (bootstrap.pypa.io)... 151.101.68.175
-      > Connecting to bootstrap.pypa.io (bootstrap.pypa.io)|151.101.68.175|:443... connected.
-      > HTTP request sent, awaiting response... 200 OK
-      > Length: 1595408 (1.5M) [text/x-python]
-      > Saving to: ‘get-pip.py’
-      >
-      > get-pip.py                100%[====================================>]   1.52M   492KB/s   in 3.2s
-      >
-      > 2017-04-23 16:18:50 (492 KB/s) - ‘get-pip.py’ saved [1595408/1595408]
+# Download pip
+pi@raspberrypi:~/ $ wget https://bootstrap.pypa.io/get-pip.py
+  > --2017-04-23 16:18:47--  https://bootstrap.pypa.io/get-pip.py
+  > Resolving bootstrap.pypa.io (bootstrap.pypa.io)... 151.101.68.175
+  > Connecting to bootstrap.pypa.io (bootstrap.pypa.io)|151.101.68.175|:443... connected.
+  > HTTP request sent, awaiting response... 200 OK
+  > Length: 1595408 (1.5M) [text/x-python]
+  > Saving to: ‘get-pip.py’
+  >
+  > get-pip.py                100%[====================================>]   1.52M   492KB/s   in 3.2s
+  >
+  > 2017-04-23 16:18:50 (492 KB/s) - ‘get-pip.py’ saved [1595408/1595408]
 
-    # Install pip
-    pi@raspberrypi:~/ $ sudo python get-pip.py
-      > Collecting pip
-      >   Downloading pip-9.0.1-py2.py3-none-any.whl (1.3MB)
-      >     100% |████████████████████████████████| 1.3MB 100kB/s
-      > Installing collected packages: pip
-      >   Found existing installation: pip 1.5.6
-      >     Uninstalling pip-1.5.6:
-      >       Successfully uninstalled pip-1.5.6
-      > Successfully installed pip-9.0.1
+# Install pip
+pi@raspberrypi:~/ $ sudo python get-pip.py
+  > Collecting pip
+  >   Downloading pip-9.0.1-py2.py3-none-any.whl (1.3MB)
+  >     100% |████████████████████████████████| 1.3MB 100kB/s
+  > Installing collected packages: pip
+  >   Found existing installation: pip 1.5.6
+  >     Uninstalling pip-1.5.6:
+  >       Successfully uninstalled pip-1.5.6
+  > Successfully installed pip-9.0.1
 
-    # Install pika
-    pi@raspberrypi:~/ $ sudo pip install pika
-      > Collecting pika
-      >   Downloading pika-0.10.0-py2.py3-none-any.whl (92kB)
-      >     100% |████████████████████████████████| 102kB 708kB/s
-      > Installing collected packages: pika
-      > Successfully installed pika-0.10.0
+# Install pika
+pi@raspberrypi:~/ $ sudo pip install pika
+  > Collecting pika
+  >   Downloading pika-0.10.0-py2.py3-none-any.whl (92kB)
+  >     100% |████████████████████████████████| 102kB 708kB/s
+  > Installing collected packages: pika
+  > Successfully installed pika-0.10.0
 
+# Install python-rpi.gpio
+pi@raspberrypi:~/LawnCronPi $ sudo apt-get install python-rpi.gpio
+  > Reading package lists... Done
+  > Building dependency tree
+  > Reading state information... Done
+  > The following packages will be upgraded:
+  >   python-rpi.gpio
+  > 1 upgraded, 0 newly installed, 0 to remove and 299 not upgraded.
+  > Need to get 23.5 kB of archives.
+  > After this operation, 6,144 B of additional disk space will be used.
+  > Get:1 http://archive.raspberrypi.org/debian/ jessie/main python-rpi.gpio armhf 0.6.3~jessie-1 [23.5 kB]
+  > Fetched 23.5 kB in 0s (50.6 kB/s)
+  > (Reading database ... 133338 files and directories currently installed.)
+  > Preparing to unpack .../python-rpi.gpio_0.6.3~jessie-1_armhf.deb ...
+  > Unpacking python-rpi.gpio (0.6.3~jessie-1) over (0.6.1-1) ...
+  > Setting up python-rpi.gpio (0.6.3~jessie-1) ...
+```
 
 INSTALL LAWN CRON
 -------------
 
-pi@raspberrypi:~ $ ~
-pi@raspberrypi:~ $ git clone https://github.com/zmiller91/LawnCronPi.git
-Cloning into 'LawnCronPi'...
-remote: Counting objects: 28, done.
-remote: Compressing objects: 100% (22/22), done.
-remote: Total 28 (delta 8), reused 25 (delta 5), pack-reused 0
-Unpacking objects: 100% (28/28), done.
-Checking connectivity... done.
+    pi@raspberrypi:~ $ ~
+    pi@raspberrypi:~ $ git clone https://github.com/zmiller91/LawnCronPi.git
+      > Cloning into 'LawnCronPi'...
+      > remote: Counting objects: 28, done.
+      > remote: Compressing objects: 100% (22/22), done.
+      > remote: Total 28 (delta 8), reused 25 (delta 5), pack-reused 0
+      > Unpacking objects: 100% (28/28), done.
+      > Checking connectivity... done.
 
 CONFIGURE LAWN CRON
 ---------------------------
