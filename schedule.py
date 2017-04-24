@@ -5,6 +5,9 @@ import logger
 
 SCHEDULE = "schedule.py"
 
+# TODO: Specifying this as a global means the service will have to be restarted if the cron file changes. This library
+# TODO: holds the cronfile in memory, so if you delete one manually then the next time this library adds one, it'll
+# TODO: undo your manual delete. Figure out if this if good behavior or not.
 # Global cron file
 cron_file = CronTab(tabfile="/etc/cron.d/lawn")
 

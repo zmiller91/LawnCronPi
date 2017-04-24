@@ -5,7 +5,7 @@ import json
 import signal
 from threading import Timer
 from datetime import datetime
-# import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 import logger
 import traceback
 
@@ -61,7 +61,7 @@ def rmq_listener(ch, method, properties, body):
     logger.log(VALVE_DRIVER, "rmq_listener received: " + body)
     message = parse_message(body)
     if message is not False and message['ts'] > start_time and message['action'] == "stop":
-        # GPIO.output(pin, False)
+        GPIO.output(pin, False)
         pid = get_pid(schedule_id)
         delete_status_file(schedule_id)
         os.kill(pid, signal.SIGTERM)
@@ -75,9 +75,9 @@ if status_file_exists(schedule_id):
 create_status_file(schedule_id)
 
 # Setup GPIO Output
-# GPIO.setmode(GPIO.BOARD)
-# GPIO.setup(pin, GPIO.OUT)
-# GPIO.output(7, True)
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(pin, GPIO.OUT)
+GPIO.output(7, True)
 
 while True:
     try:
