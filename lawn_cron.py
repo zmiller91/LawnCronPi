@@ -1,5 +1,6 @@
 __author__ = 'zmiller'
 
+import traceback
 import pika
 import configuration
 import json
@@ -25,9 +26,9 @@ def callback(ch, method, properties, body):
     request = parseRequest(body)
     if request is not False:
 
-        action = request['method']
-        id = request["id"] if "id" in request else ""
-        zone = request["zone"] if "zone" in request else ""
+        action = str(request['method'])
+        id = str(request["id"]) if "id" in request else ""
+        zone = str(request["zone"]) if "zone" in request else ""
         duration = request["duration"] if "duration" in request else {}
         time = request["time"] if "time" in request else {}
         days = request["days"] if "days" in request else []
@@ -78,6 +79,7 @@ while True:
         channel.start_consuming()
 
     except Exception:
+        traceback.print_exc()
         logger.log(LAWN_CRON, "Exception raised.")
         logger.log(LAWN_CRON, sys.exc_info()[0])
         continue;
