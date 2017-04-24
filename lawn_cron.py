@@ -56,9 +56,13 @@ def callback(ch, method, properties, body):
         elif action == "update":
             schedule.update(id, zone, duration, time, days)
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(host=configuration.rmq_host))
-channel = connection.channel()
-channel.queue_declare(queue=configuration.id)
-channel.basic_consume(callback, queue=configuration.id, no_ack=True)
-print(' [*] Waiting for messages. To exit press CTRL+C')
-channel.start_consuming()
+while True:
+    try:
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=configuration.rmq_host))
+        channel = connection.channel()
+        channel.queue_declare(queue=configuration.id)
+        channel.basic_consume(callback, queue=configuration.id, no_ack=True)
+        print(' [*] Waiting for messages. To exit press CTRL+C')
+        channel.start_consuming()
+    except Exception:
+        continue;

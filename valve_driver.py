@@ -5,6 +5,9 @@ import json
 import signal
 from threading import Timer
 from datetime import datetime
+import RPi.GPIO as GPIO
+
+pin = 7
 
 schedule_id = sys.argv[1]
 duration = sys.argv[2]
@@ -54,6 +57,7 @@ def parse_message(message):
 def rmq_listener(ch, method, properties, body):
     message = parse_message(body)
     if message is not False and message['ts'] > start_time and message['action'] == "stop":
+	GPIO.output(pin, False)
         pid = get_pid(schedule_id)
         delete_status_file(schedule_id)
         os.kill(pid, signal.SIGTERM)
@@ -65,6 +69,11 @@ if status_file_exists(schedule_id):
 
 # Write file indicating this schedule is running
 create_status_file(schedule_id)
+
+# Setup GPIO Output
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(pin, GPIO.OUT)
+GPIO.output(7, True)
 
 # Establish local RMQ connection and listen schedule_id channel
 connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
