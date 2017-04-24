@@ -5,6 +5,8 @@ import configuration
 import json
 import schedule
 from datetime import datetime
+import logger
+import sys
 
 #TODO: clean up pids
 
@@ -23,7 +25,7 @@ def log(message):
     status_file.close()
 
 def callback(ch, method, properties, body):
-
+    logger.log(body)
     request = parseRequest(body)
     if request != False:
 
@@ -35,17 +37,23 @@ def callback(ch, method, properties, body):
         days = request["days"] if "days" in request else []
 
         if action == 'add':
+            logger.log("adding...")
             schedule.add(id, zone, duration, time, days)
 
         elif action == "delete":
+            logger.log("deleting...")
             schedule.delete(id)
 
         elif action == "play":
+            logger.log("playing...")
             # execute command and don't block
             schedule.play(id, zone, duration)
 
         elif action == "stop":
+            logger.log("stopping...")
             message = json.dumps({'action': 'stop', 'ts': str(datetime.now())})
+
+            logger.log("sending: " + message)
             local_connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
             schedule_channel = local_connection.channel()
             schedule_channel.queue_declare(queue=zone)
@@ -65,4 +73,5 @@ while True:
         print(' [*] Waiting for messages. To exit press CTRL+C')
         channel.start_consuming()
     except Exception:
+        logger.log(sys.exc_info()[0])
         continue;

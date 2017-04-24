@@ -6,6 +6,7 @@ import signal
 from threading import Timer
 from datetime import datetime
 import RPi.GPIO as GPIO
+import logger
 
 pin = 7
 
@@ -55,6 +56,7 @@ def parse_message(message):
 
 
 def rmq_listener(ch, method, properties, body):
+    logger.log("rmq_listener received: " + body)
     message = parse_message(body)
     if message is not False and message['ts'] > start_time and message['action'] == "stop":
 	GPIO.output(pin, False)
@@ -75,12 +77,17 @@ GPIO.setmode(GPIO.BOARD)
 GPIO.setup(pin, GPIO.OUT)
 GPIO.output(7, True)
 
-# Establish local RMQ connection and listen schedule_id channel
-connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
-channel = connection.channel()
-channel.queue_declare(queue=schedule_id)
-channel.basic_consume(rmq_listener, queue=schedule_id, no_ack=True)
+while True:
+    try:
+        # Establish local RMQ connection and listen schedule_id channel
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
+        channel = connection.channel()
+        channel.queue_declare(queue=schedule_id)
+        channel.basic_consume(rmq_listener, queue=schedule_id, no_ack=True)
 
-# Set the shutdown timer and start consuming
-timer = Timer(float(duration), shutdown, [channel, schedule_id]).start()
-channel.start_consuming()
+        # Set the shutdown timer and start consuming
+        timer = Timer(float(duration), shutdown, [channel, schedule_id]).start()
+        channel.start_consuming()
+
+    except Exception:
+        logger.log(sys.exc_info()[0])
