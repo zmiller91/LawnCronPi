@@ -8,6 +8,7 @@ from datetime import datetime
 import RPi.GPIO as GPIO
 import logger
 
+VALVE_DRIVER = "valve_driver.py"
 pin = 7
 
 schedule_id = sys.argv[1]
@@ -59,7 +60,7 @@ def rmq_listener(ch, method, properties, body):
     logger.log("rmq_listener received: " + body)
     message = parse_message(body)
     if message is not False and message['ts'] > start_time and message['action'] == "stop":
-	GPIO.output(pin, False)
+        GPIO.output(pin, False)
         pid = get_pid(schedule_id)
         delete_status_file(schedule_id)
         os.kill(pid, signal.SIGTERM)
@@ -79,15 +80,25 @@ GPIO.output(7, True)
 
 while True:
     try:
+
+        logger.log(VALVE_DRIVER, "Attempting to establish connection...")
         # Establish local RMQ connection and listen schedule_id channel
         connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
+        logger.log(VALVE_DRIVER, "Connection established with localhost")
+
         channel = connection.channel()
+        logger.log(VALVE_DRIVER, "Created a channel")
+
         channel.queue_declare(queue=schedule_id)
+        logger.log(VALVE_DRIVER, "Declared queue " + schedule_id)
+
         channel.basic_consume(rmq_listener, queue=schedule_id, no_ack=True)
+        logger.log(VALVE_DRIVER, "Consuming queue " + schedule_id)
 
         # Set the shutdown timer and start consuming
         timer = Timer(float(duration), shutdown, [channel, schedule_id]).start()
         channel.start_consuming()
 
     except Exception:
-        logger.log(sys.exc_info()[0])
+        logger.log(VALVE_DRIVER, "Exception raised")
+        logger.log(VALVE_DRIVER, sys.exc_info()[0])
