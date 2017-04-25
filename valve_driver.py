@@ -79,6 +79,7 @@ GPIO.setmode(GPIO.BOARD)
 GPIO.setup(pin, GPIO.OUT)
 GPIO.output(7, True)
 
+started = False
 while True:
     try:
 
@@ -97,7 +98,10 @@ while True:
         logger.log(VALVE_DRIVER, "Consuming queue " + schedule_id)
 
         # Set the shutdown timer and start consuming
-        timer = Timer(float(duration), shutdown, [channel, schedule_id]).start()
+        if not started:
+            Timer(float(duration), shutdown, [channel, schedule_id]).start()
+            started = True
+
         channel.start_consuming()
 
     except Exception:
