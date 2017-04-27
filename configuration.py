@@ -15,4 +15,4 @@ pid_files = "/tmp/lcpids"
 log_file="log"
 log_level = logging.INFO
 
-cleanup_frequency = 1.0
+cleanup_frequency = 15.0  # in seconds

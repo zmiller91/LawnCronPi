@@ -4,8 +4,10 @@ import logger
 GPIOLOG = "gpio.py"
 # GPIO.setmode(GPIO.BOARD)
 
+
 def get_pin(schedule_id):
     return 7
+
 
 def setup(zone):
     pin = get_pin(zone)
