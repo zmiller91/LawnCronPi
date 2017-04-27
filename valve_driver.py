@@ -58,6 +58,7 @@ pids.create_status_file(pid_file, schedule_id, datetime.now(), datetime.now() + 
 gpio.setup(zone)
 gpio.on(zone)
 
+started = False
 last_error_report = None
 while True:
     try:
@@ -77,7 +78,10 @@ while True:
         logger.info(VALVE_DRIVER, "Consuming queue " + schedule_id)
 
         # Set the shutdown timer and start consuming
-        timer = Timer(float(duration), shutdown, [channel, schedule_id]).start()
+        if not started:
+            Timer(float(duration), shutdown, [channel, schedule_id]).start()
+            started = True
+
         channel.start_consuming()
 
     except Exception:
