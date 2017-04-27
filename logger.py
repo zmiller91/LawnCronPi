@@ -6,7 +6,7 @@ logging.basicConfig(filename=configuration.log_file, level=configuration.log_lev
 
 
 def get_log_line(identifier, message):
-    return "{0}\t{1}\t{2}\n".format(str(datetime.now()), identifier, message)
+    return "{0}\t{1}\t{2}".format(str(datetime.now()), identifier, message)
 
 
 def debug(identifier, message):

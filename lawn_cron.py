@@ -1,15 +1,16 @@
-__author__ = 'zmiller'
-
 import time
 import pika
 import configuration
 import json
 import schedule
+from threading import Timer
 from datetime import datetime, timedelta
 import logger
 import sys
+import os
+import pids
+import gpio
 
-#TODO: clean up pids
 LAWN_CRON = "lawn_cron.py"
 
 
@@ -22,49 +23,65 @@ def parse_request(request):
         return False
 
 
+def cleanup_pids():
+    for name in os.listdir(configuration.pid_files):
+        pid_file = pids.create_pid_file_path(name)
+        pid_contents = pids.read_pid_file(pid_file)
+        if pid_contents is not False:
+            end = datetime.strptime(pid_contents["end"], '%Y-%m-%d %H:%M:%S.%f')
+            if end < datetime.now() + timedelta(minutes=1):
+                gpio.off(pid_contents["zone"])
+                pids.kill(int(pid_contents["pid"]))
+                pids.delete_status_file(pid_file)
+                logger.info(LAWN_CRON, "Cleaned up pid {0}".format(pid_contents["pid"]))
+
+    Timer(configuration.cleanup_frequency, cleanup_pids).start()
+
+
 def callback(ch, method, properties, body):
-    logger.log(LAWN_CRON, "Received: " + body)
+    logger.debug(LAWN_CRON, "Received: " + body)
     request = parse_request(body)
     if request is not False:
 
         action = str(request['method'])
-        id = str(request["id"]) if "id" in request else ""
+        schedule_id = str(request["id"]) if "id" in request else ""
         zone = str(request["zone"]) if "zone" in request else ""
         duration = request["duration"] if "duration" in request else {}
-        time = request["time"] if "time" in request else {}
+        start_time = request["time"] if "time" in request else {}
         days = request["days"] if "days" in request else []
 
         if action == 'add':
-            logger.info(LAWN_CRON, "Adding :" + body)
-            schedule.add(id, zone, duration, time, days)
+            logger.debug(LAWN_CRON, "Adding :" + body)
+            schedule.add(schedule_id, zone, duration, start_time, days)
 
         elif action == "delete":
-            logger.info(LAWN_CRON, "Deleting: " + body)
-            schedule.delete(id)
+            logger.debug(LAWN_CRON, "Deleting: " + body)
+            schedule.delete(schedule_id)
 
         elif action == "play":
-            logger.info(LAWN_CRON, "Playing: " + body)
+            logger.debug(LAWN_CRON, "Playing: " + body)
             # execute command and don't block
-            schedule.play(id, zone, duration)
 
         elif action == "stop":
-            logger.info(LAWN_CRON, "Stopping: " + body)
+            logger.debug(LAWN_CRON, "Stopping: " + body)
             message = json.dumps({'action': 'stop', 'ts': str(datetime.now())})
 
-            logger.info(LAWN_CRON, "Sending: " + message + "To: " + zone)
+            logger.info(LAWN_CRON, "Sending: " + message + "To: " + schedule_id)
             local_connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
             schedule_channel = local_connection.channel()
-            schedule_channel.queue_declare(queue=zone)
-            schedule_channel.basic_publish(exchange='', routing_key=zone, body=message)
+            schedule_channel.queue_declare(queue=schedule_id)
+            schedule_channel.basic_publish(exchange='', routing_key=schedule_id, body=message)
             local_connection.close()
 
         elif action == "update":
-            logger.info(LAWN_CRON, "Updating: " + body)
-            schedule.update(id, zone, duration, time, days)
+            logger.debug(LAWN_CRON, "Updating: " + body)
+            schedule.update(schedule_id, zone, duration, start_time, days)
 
 last_error_report = None
+Timer(configuration.cleanup_frequency, cleanup_pids).start()
 while True:
     try:
+
         connection = pika.BlockingConnection(pika.ConnectionParameters(host=configuration.rmq_host))
         logger.info(LAWN_CRON, "Connected to " + configuration.rmq_host)
 

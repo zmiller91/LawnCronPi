@@ -1,43 +1,19 @@
-import os
 import sys
 import pika
 import json
-import signal
 from threading import Timer
 from datetime import datetime, timedelta
-import RPi.GPIO as GPIO
 import logger
-import traceback
+import gpio
+import pids
 
 VALVE_DRIVER = "valve_driver.py"
 pin = 7
 
 schedule_id = sys.argv[1]
-duration = sys.argv[2]
+zone = sys.argv[2]
+duration = sys.argv[3]
 start_time = datetime.now()
-pid_root = "/tmp/"
-
-
-def get_pid(pid_file):
-    f = open(pid_root + pid_file, 'r')
-    pid = f.read()
-    f.close()
-    return int(pid)
-
-
-def status_file_exists(name):
-    return os.path.isfile(pid_root + name)
-
-
-def create_status_file(name):
-    status_file = open(pid_root + str(name), "w")
-    status_file.write(str(os.getpid()))
-    status_file.close()
-
-
-def delete_status_file(name):
-    if status_file_exists(name):
-        os.remove(pid_root + name)
 
 
 def shutdown(ch, rk):
@@ -61,23 +37,26 @@ def rmq_listener(ch, method, properties, body):
     logger.info(VALVE_DRIVER, "rmq_listener received: " + body)
     message = parse_message(body)
     if message is not False and message['ts'] > start_time and message['action'] == "stop":
-        GPIO.output(pin, False)
-        pid = get_pid(schedule_id)
-        delete_status_file(schedule_id)
-        os.kill(pid, signal.SIGTERM)
+        gpio.off(zone)
+        pid_file_path = pids.create_pid_file_path(schedule_id)
+        pid_file_contents = pids.read_pid_file(pid_file_path)
+        pids.delete_status_file(pid_file_path)
+        pids.kill(int(pid_file_contents["pid"]))
 
+
+# PID file
+pid_file = pids.create_pid_file_path(schedule_id)
 
 # Check if schedule is running in another thread
-if status_file_exists(schedule_id):
+if pids.status_file_exists(schedule_id):
     sys.exit(0)
 
 # Write file indicating this schedule is running
-create_status_file(schedule_id)
+pids.create_status_file(pid_file, schedule_id, datetime.now(), datetime.now() + timedelta(seconds=int(duration)))
 
 # Setup GPIO Output
-GPIO.setmode(GPIO.BOARD)
-GPIO.setup(pin, GPIO.OUT)
-GPIO.output(7, True)
+gpio.setup(zone)
+gpio.on(zone)
 
 last_error_report = None
 while True:
