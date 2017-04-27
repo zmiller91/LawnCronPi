@@ -1,3 +1,5 @@
+import logging
+
 __author__ = 'zmiller'
 
 # Rabbit MQ Configuration
@@ -8,4 +10,6 @@ rmq_host = "lawncron.com"
 python = "/usr/bin/python"
 driver = "/home/zmiller/PycharmProjects/LawnCronPi/valve_driver.py"
 
-debug = True
+
+log_file="/tmp/lclog"
+log_level = logging.INFO

@@ -4,7 +4,7 @@ import pika
 import json
 import signal
 from threading import Timer
-from datetime import datetime
+from datetime import datetime, timedelta
 import RPi.GPIO as GPIO
 import logger
 import traceback
@@ -58,7 +58,7 @@ def parse_message(message):
 
 
 def rmq_listener(ch, method, properties, body):
-    logger.log(VALVE_DRIVER, "rmq_listener received: " + body)
+    logger.info(VALVE_DRIVER, "rmq_listener received: " + body)
     message = parse_message(body)
     if message is not False and message['ts'] > start_time and message['action'] == "stop":
         GPIO.output(pin, False)
@@ -79,28 +79,37 @@ GPIO.setmode(GPIO.BOARD)
 GPIO.setup(pin, GPIO.OUT)
 GPIO.output(7, True)
 
+last_error_report = None
 while True:
     try:
 
-        logger.log(VALVE_DRIVER, "Attempting to establish connection...")
+        logger.info(VALVE_DRIVER, "Attempting to establish connection...")
         # Establish local RMQ connection and listen schedule_id channel
         connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
-        logger.log(VALVE_DRIVER, "Connection established with localhost")
+        logger.info(VALVE_DRIVER, "Connection established with localhost")
 
         channel = connection.channel()
-        logger.log(VALVE_DRIVER, "Created a channel")
+        logger.info(VALVE_DRIVER, "Created a channel")
 
         channel.queue_declare(queue=schedule_id)
-        logger.log(VALVE_DRIVER, "Declared queue " + schedule_id)
+        logger.info(VALVE_DRIVER, "Declared queue " + schedule_id)
 
         channel.basic_consume(rmq_listener, queue=schedule_id, no_ack=True)
-        logger.log(VALVE_DRIVER, "Consuming queue " + schedule_id)
+        logger.info(VALVE_DRIVER, "Consuming queue " + schedule_id)
 
         # Set the shutdown timer and start consuming
         timer = Timer(float(duration), shutdown, [channel, schedule_id]).start()
         channel.start_consuming()
 
     except Exception:
-        traceback.print_exc()
-        logger.log(VALVE_DRIVER, "Exception raised")
-        logger.log(VALVE_DRIVER, sys.exc_info()[0])
+
+        if last_error_report is None or (datetime.now() - last_error_report) > timedelta(minutes=20):
+            logger.warn(VALVE_DRIVER, "Exception raised.")
+            logger.warn(VALVE_DRIVER, sys.exc_info()[0])
+            last_error_report = datetime.now()
+
+        else:
+            logger.debug(VALVE_DRIVER, "Exception raised.")
+            logger.debug(VALVE_DRIVER, sys.exc_info()[0])
+
+        continue

@@ -1,11 +1,11 @@
 __author__ = 'zmiller'
 
-import traceback
+import time
 import pika
 import configuration
 import json
 import schedule
-from datetime import datetime
+from datetime import datetime, timedelta
 import logger
 import sys
 
@@ -13,7 +13,7 @@ import sys
 LAWN_CRON = "lawn_cron.py"
 
 
-def parseRequest(request):
+def parse_request(request):
 
     try:
         return json.loads(request)
@@ -21,9 +21,10 @@ def parseRequest(request):
     except ValueError:
         return False
 
+
 def callback(ch, method, properties, body):
     logger.log(LAWN_CRON, "Received: " + body)
-    request = parseRequest(body)
+    request = parse_request(body)
     if request is not False:
 
         action = str(request['method'])
@@ -34,23 +35,23 @@ def callback(ch, method, properties, body):
         days = request["days"] if "days" in request else []
 
         if action == 'add':
-            logger.log(LAWN_CRON, "Adding :" + body)
+            logger.info(LAWN_CRON, "Adding :" + body)
             schedule.add(id, zone, duration, time, days)
 
         elif action == "delete":
-            logger.log(LAWN_CRON, "Deleting: " + body)
+            logger.info(LAWN_CRON, "Deleting: " + body)
             schedule.delete(id)
 
         elif action == "play":
-            logger.log(LAWN_CRON, "Playing: " + body)
+            logger.info(LAWN_CRON, "Playing: " + body)
             # execute command and don't block
             schedule.play(id, zone, duration)
 
         elif action == "stop":
-            logger.log(LAWN_CRON, "Stopping: " + body)
+            logger.info(LAWN_CRON, "Stopping: " + body)
             message = json.dumps({'action': 'stop', 'ts': str(datetime.now())})
 
-            logger.log(LAWN_CRON, "Sending: " + message + "To: " + zone)
+            logger.info(LAWN_CRON, "Sending: " + message + "To: " + zone)
             local_connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
             schedule_channel = local_connection.channel()
             schedule_channel.queue_declare(queue=zone)
@@ -58,28 +59,37 @@ def callback(ch, method, properties, body):
             local_connection.close()
 
         elif action == "update":
-            logger.log(LAWN_CRON, "Updating: " + body)
+            logger.info(LAWN_CRON, "Updating: " + body)
             schedule.update(id, zone, duration, time, days)
 
+last_error_report = None
 while True:
     try:
         connection = pika.BlockingConnection(pika.ConnectionParameters(host=configuration.rmq_host))
-        logger.log(LAWN_CRON, "Connected to " + configuration.rmq_host)
+        logger.info(LAWN_CRON, "Connected to " + configuration.rmq_host)
 
         channel = connection.channel()
-        logger.log(LAWN_CRON, "Created channel")
+        logger.info(LAWN_CRON, "Created channel")
 
         channel.queue_declare(queue=configuration.id)
-        logger.log(LAWN_CRON, "Declaring queue: " + configuration.id)
+        logger.info(LAWN_CRON, "Declaring queue: " + configuration.id)
 
         channel.basic_consume(callback, queue=configuration.id, no_ack=True)
-        logger.log(LAWN_CRON, "Consuming queue: " + configuration.id)
+        logger.info(LAWN_CRON, "Consuming queue: " + configuration.id)
 
         print(' [*] Waiting for messages. To exit press CTRL+C')
         channel.start_consuming()
 
     except Exception:
-        traceback.print_exc()
-        logger.log(LAWN_CRON, "Exception raised.")
-        logger.log(LAWN_CRON, sys.exc_info()[0])
-        continue;
+
+        if last_error_report is None or (datetime.now() - last_error_report) > timedelta(minutes=20):
+            logger.warn(LAWN_CRON, "Exception raised.")
+            logger.warn(LAWN_CRON, sys.exc_info()[0])
+            last_error_report = datetime.now()
+
+        else:
+            logger.debug(LAWN_CRON, "Exception raised.")
+            logger.debug(LAWN_CRON, sys.exc_info()[0])
+
+        time.sleep(15000)
+        continue
