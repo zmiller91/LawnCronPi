@@ -67,7 +67,7 @@ def stop(schedule_id):
     logger.info(SCHEDULE, "Stopping schedule " + schedule_id)
     message = json.dumps({'action': 'stop', 'ts': str(datetime.now())})
 
-    logger.info(SCHEDULE, "Sending: " + message + "To: " + schedule_id)
+    logger.debug(SCHEDULE, "Sending: " + message + "To: " + schedule_id)
     local_connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
     schedule_channel = local_connection.channel()
     schedule_channel.queue_declare(queue=schedule_id)

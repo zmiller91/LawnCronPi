@@ -34,7 +34,7 @@ def parse_message(message):
 
 
 def rmq_listener(ch, method, properties, body):
-    logger.info(VALVE_DRIVER, "rmq_listener received: " + body)
+    logger.debug(VALVE_DRIVER, "rmq_listener received: " + body)
     message = parse_message(body)
     if message is not False and message['ts'] > start_time and message['action'] == "stop":
         gpio.off(zone)

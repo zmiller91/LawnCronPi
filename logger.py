@@ -2,8 +2,8 @@ from datetime import datetime
 import logging
 import configuration
 
-logging.getLogger("urllib3").setLevel(logging.WARNING)
-logging.getLogger("pika").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.ERROR)
+logging.getLogger("pika").setLevel(logging.ERROR)
 logging.basicConfig(filename=configuration.log_file, level=configuration.log_level)
 
 
