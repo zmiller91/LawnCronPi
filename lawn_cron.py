@@ -82,7 +82,7 @@ def callback(ch, method, properties, body):
 
 last_error_report = None
 Timer(configuration.cleanup_frequency, cleanup_pids).start()
-Timer(450, send_status_notification).start()
+Timer(1, send_status_notification).start()
 while True:
     try:
 
