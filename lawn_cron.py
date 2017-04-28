@@ -28,7 +28,7 @@ def parse_request(request):
 
 def send_status_notification():
     logger.info(LAWN_CRON, "Posting status")
-    network_pool.apply_async(requests.post, ['http://lawncron.com/status', configuration.id])
+    network_pool.apply_async(requests.post, ['http://lawncron.com/api/status', {"rpi": configuration.id}])
     Timer(450, send_status_notification).start()
 
 
