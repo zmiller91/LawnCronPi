@@ -52,7 +52,7 @@ if pids.status_file_exists(schedule_id):
     sys.exit(0)
 
 # Write file indicating this schedule is running
-pids.create_status_file(pid_file, schedule_id, datetime.now(), datetime.now() + timedelta(seconds=int(duration)))
+pids.create_status_file(pid_file, zone, datetime.now(), datetime.now() + timedelta(seconds=int(duration)))
 
 # Setup GPIO Output
 gpio.setup(zone)
