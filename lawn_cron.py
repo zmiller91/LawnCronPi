@@ -38,7 +38,7 @@ def cleanup_pids():
         pid_contents = pids.read_pid_file(pid_file)
         if pid_contents is not False:
             end = datetime.strptime(pid_contents["end"], '%Y-%m-%d %H:%M:%S.%f')
-            if end < datetime.now() + timedelta(minutes=1):
+            if end < datetime.now():
                 gpio.setup(pid_contents["zone"])
                 gpio.off(pid_contents["zone"])
                 pids.kill(int(pid_contents["pid"]))
