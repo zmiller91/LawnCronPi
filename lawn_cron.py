@@ -10,8 +10,11 @@ import sys
 import os
 import pids
 import gpio
+from multiprocessing.dummy import Pool
+import requests
 
 LAWN_CRON = "lawn_cron.py"
+network_pool = Pool(10)
 
 
 def parse_request(request):
@@ -21,6 +24,12 @@ def parse_request(request):
 
     except ValueError:
         return False
+
+
+def send_status_notification():
+    logger.info(LAWN_CRON, "Posting status")
+    network_pool.apply_async(requests.post, ['http://lawncron.com/status', configuration.id])
+    Timer(450, send_status_notification).start()
 
 
 def cleanup_pids():
@@ -61,25 +70,19 @@ def callback(ch, method, properties, body):
 
         elif action == "play":
             logger.debug(LAWN_CRON, "Playing: " + body)
-            # execute command and don't block
+            schedule.play(schedule_id, zone, duration)
 
         elif action == "stop":
-            logger.debug(LAWN_CRON, "Stopping: " + body)
-            message = json.dumps({'action': 'stop', 'ts': str(datetime.now())})
-
-            logger.info(LAWN_CRON, "Sending: " + message + "To: " + schedule_id)
-            local_connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
-            schedule_channel = local_connection.channel()
-            schedule_channel.queue_declare(queue=schedule_id)
-            schedule_channel.basic_publish(exchange='', routing_key=schedule_id, body=message)
-            local_connection.close()
+            logger.debug(LAWN_CRON, "Stopping :" + body)
+            schedule.stop(schedule_id)
 
         elif action == "update":
             logger.debug(LAWN_CRON, "Updating: " + body)
             schedule.update(schedule_id, zone, duration, start_time, days)
 
 last_error_report = None
-Timer(configuration.cleanup_frequency, cleanup_pids).start()
+# Timer(configuration.cleanup_frequency, cleanup_pids).start()
+# Timer(450, send_status_notification).start()
 while True:
     try:
 
@@ -98,11 +101,12 @@ while True:
         print(' [*] Waiting for messages. To exit press CTRL+C')
         channel.start_consuming()
 
-    except Exception:
+    except Exception as e:
 
         if last_error_report is None or (datetime.now() - last_error_report) > timedelta(minutes=20):
+            print e
             logger.warn(LAWN_CRON, "Exception raised.")
-            logger.warn(LAWN_CRON, sys.exc_info()[0])
+            logger.warn(LAWN_CRON, e.message)
             last_error_report = datetime.now()
 
         else:
