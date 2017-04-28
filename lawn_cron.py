@@ -81,8 +81,8 @@ def callback(ch, method, properties, body):
             schedule.update(schedule_id, zone, duration, start_time, days)
 
 last_error_report = None
-# Timer(configuration.cleanup_frequency, cleanup_pids).start()
-# Timer(450, send_status_notification).start()
+Timer(configuration.cleanup_frequency, cleanup_pids).start()
+Timer(450, send_status_notification).start()
 while True:
     try:
 
