@@ -2,6 +2,7 @@ from datetime import datetime
 import logging
 import configuration
 
+logging.getLogger("pika").propagate = False
 logging.basicConfig(filename=configuration.log_file, level=configuration.log_level)
 
 
