@@ -11,6 +11,9 @@ logging.basicConfig(filename=configuration.log_file, level=configuration.log_lev
 
 def create_dirs():
     dir = os.path.dirname(configuration.log_file)
+    if dir == '':
+        return
+
     try:
         os.makedirs(dir)
     except OSError as exc:  # Python >2.5

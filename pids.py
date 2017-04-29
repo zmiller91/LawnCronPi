@@ -4,8 +4,12 @@ import json
 import signal
 import errno
 
+
 def create_dirs():
     dir = configuration.pid_files
+    if dir == '':
+        return
+
     try:
         os.makedirs(dir)
     except OSError as exc:  # Python >2.5
