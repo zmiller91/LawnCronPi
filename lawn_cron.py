@@ -96,6 +96,8 @@ while True:
     if network_connectivity:
         break;
 
+    time.sleep(5)
+
 
 last_error_report = None
 Timer(configuration.cleanup_frequency, cleanup_pids).start()

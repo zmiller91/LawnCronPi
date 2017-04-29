@@ -49,6 +49,7 @@ pid_file = pids.create_pid_file_path(schedule_id)
 
 # Check if schedule is running in another thread
 if pids.status_file_exists(schedule_id):
+    logger.info(VALVE_DRIVER, "Schedule {0} already running, exiting".format(schedule_id))
     sys.exit(0)
 
 # Write file indicating this schedule is running

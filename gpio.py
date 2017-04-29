@@ -6,7 +6,7 @@ GPIO.setmode(GPIO.BOARD)
 
 
 def get_pin(zone):
-    return 7
+    return 11
 
 
 def setup(zone):
