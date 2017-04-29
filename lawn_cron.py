@@ -17,6 +17,16 @@ LAWN_CRON = "lawn_cron.py"
 network_pool = Pool(10)
 
 
+def ping(hostname):
+    response = os.system("ping -c 1 " + hostname)
+    if response == 0:
+        pingstatus = True
+    else:
+        pingstatus = False
+
+    return pingstatus
+
+
 def parse_request(request):
 
     try:
@@ -27,7 +37,7 @@ def parse_request(request):
 
 
 def send_status_notification():
-    logger.info(LAWN_CRON, "Posting status")
+    logger.debug(LAWN_CRON, "Posting status")
     network_pool.apply_async(requests.post, ['http://lawncron.com/api/status', {"rpi": configuration.id}])
     Timer(450, send_status_notification).start()
 
@@ -79,6 +89,13 @@ def callback(ch, method, properties, body):
         elif action == "update":
             logger.debug(LAWN_CRON, "Updating: " + body)
             schedule.update(schedule_id, zone, duration, start_time, days)
+
+# Wait until the network is available
+while True:
+    network_connectivity = ping(configuration.rmq_host)
+    if network_connectivity:
+        break;
+
 
 last_error_report = None
 Timer(configuration.cleanup_frequency, cleanup_pids).start()
