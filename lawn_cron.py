@@ -12,9 +12,17 @@ import pids
 import gpio
 from multiprocessing.dummy import Pool
 import requests
+import subprocess
 
 LAWN_CRON = "lawn_cron.py"
 network_pool = Pool(10)
+
+
+def check_ntpq_connected():
+    result = subprocess.check_output("ntpq -p | wc -l", shell=True)
+    if int(result) > 2:
+        return True
+    return False
 
 
 def ping(hostname):
@@ -90,18 +98,28 @@ def callback(ch, method, properties, body):
             logger.debug(LAWN_CRON, "Updating: " + body)
             schedule.update(schedule_id, zone, duration, start_time, days)
 
+# Wait until the clock is updated
+while True:
+    ntpq_connected = check_ntpq_connected()
+    if ntpq_connected:
+        break
+
+    time.sleep(5)
+
 # Wait until the network is available
 while True:
     network_connectivity = ping(configuration.rmq_host)
     if network_connectivity:
-        break;
+        break
 
     time.sleep(5)
 
-
-last_error_report = None
+# Set async timers
 Timer(configuration.cleanup_frequency, cleanup_pids).start()
 Timer(1, send_status_notification).start()
+
+# Start listening to RMQ
+last_error_report = None
 while True:
     try:
 
