@@ -48,7 +48,7 @@ def rmq_listener(ch, method, properties, body):
 pid_file = pids.create_pid_file_path(schedule_id)
 
 # Check if schedule is running in another thread
-if pids.status_file_exists(schedule_id):
+if pids.status_file_exists(pid_file):
     logger.info(VALVE_DRIVER, "Schedule {0} already running, exiting".format(schedule_id))
     sys.exit(0)
 
