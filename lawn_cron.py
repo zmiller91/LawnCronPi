@@ -18,11 +18,8 @@ LAWN_CRON = "lawn_cron.py"
 network_pool = Pool(10)
 
 
-def check_ntpq_connected():
-    result = subprocess.check_output("ntpq -p | wc -l", shell=True)
-    if int(result) > 2:
-        return True
-    return False
+def purge_queue(queue):
+    response = os.system("rabbitmqctl purge_queue {0}".format(queue))
 
 
 def ping(hostname):
@@ -98,21 +95,18 @@ def callback(ch, method, properties, body):
             logger.debug(LAWN_CRON, "Updating: " + body)
             schedule.update(schedule_id, zone, duration, start_time, days)
 
-# Wait until the clock is updated
-while True:
-    ntpq_connected = check_ntpq_connected()
-    if ntpq_connected:
-        break
-
-    time.sleep(5)
-
 # Wait until the network is available
 while True:
     network_connectivity = ping(configuration.rmq_host)
     if network_connectivity:
+        logger.info("Network connection found")
         break
 
     time.sleep(5)
+
+# Wait for a bit -- useful in the case of a unexpected reboot
+logger.info("Warming up, this will take a few seconds")
+time.sleep(7)
 
 # Set async timers
 Timer(configuration.cleanup_frequency, cleanup_pids).start()
@@ -123,15 +117,23 @@ last_error_report = None
 while True:
     try:
 
+        # Purge the queue -- get rid of any old messages
+        if last_error_report is None:
+            purge_queue(configuration.id)
+
+        # Establish RMQ connection
         connection = pika.BlockingConnection(pika.ConnectionParameters(host=configuration.rmq_host))
         logger.info(LAWN_CRON, "Connected to " + configuration.rmq_host)
 
+        # Create channel
         channel = connection.channel()
         logger.info(LAWN_CRON, "Created channel")
 
+        # Decleare queue
         channel.queue_declare(queue=configuration.id)
         logger.info(LAWN_CRON, "Declaring queue: " + configuration.id)
 
+        # Start listening to RMQ
         channel.basic_consume(callback, queue=configuration.id, no_ack=True)
         logger.info(LAWN_CRON, "Consuming queue: " + configuration.id)
 
