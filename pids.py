@@ -4,6 +4,10 @@ import json
 import signal
 
 
+def create_dirs():
+    os.makedirs(configuration.pid_files, exist_ok=True)
+
+
 def create_pid_file_path(name):
     return os.path.join(configuration.pid_files, str(name))
 
@@ -44,3 +48,5 @@ def delete_status_file(file_path):
 
 def kill(pid):
     os.kill(int(pid), signal.SIGTERM)
+
+create_dirs()
