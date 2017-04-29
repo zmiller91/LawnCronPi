@@ -99,20 +99,20 @@ def callback(ch, method, properties, body):
 while True:
     network_connectivity = ping(configuration.rmq_host)
     if network_connectivity:
-        logger.info("Network connection found")
+        logger.info(LAWN_CRON, "Network connection found")
         break
 
     time.sleep(5)
 
 # Wait for a bit -- useful in the case of a unexpected reboot
-logger.info("Warming up, this will take a few seconds")
+logger.info(LAWN_CRON, "Warming up, this will take a few seconds")
 time.sleep(7)
 
 # Set async timers
 Timer(configuration.cleanup_frequency, cleanup_pids).start()
 Timer(1, send_status_notification).start()
 
-# Start listening to RMQ
+# Setup RMQ
 last_error_report = None
 while True:
     try:
