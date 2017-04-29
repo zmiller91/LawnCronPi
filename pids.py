@@ -2,10 +2,17 @@ import configuration
 import os
 import json
 import signal
-
+import errno
 
 def create_dirs():
-    os.makedirs(configuration.pid_files, exist_ok=True)
+    dir = configuration.pid_files
+    try:
+        os.makedirs(dir)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(dir):
+            pass
+        else:
+            raise
 
 
 def create_pid_file_path(name):

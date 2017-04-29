@@ -2,6 +2,7 @@ from datetime import datetime
 import logging
 import configuration
 import os
+import errno
 
 logging.getLogger("urllib3").setLevel(logging.ERROR)
 logging.getLogger("pika").setLevel(logging.ERROR)
@@ -10,7 +11,13 @@ logging.basicConfig(filename=configuration.log_file, level=configuration.log_lev
 
 def create_dirs():
     dir = os.path.dirname(configuration.log_file)
-    os.makedirs(dir, exist_ok=True)
+    try:
+        os.makedirs(dir)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(dir):
+            pass
+        else:
+            raise
 
 
 def get_log_line(identifier, message):
