@@ -44,6 +44,7 @@ def add(schedule_id, zone, duration, time, days):
 
 def delete(schedule_id):
 
+    stop(schedule_id)
     cron_file.remove_all(comment=schedule_id)
     cron_file.write()
     logger.info(SCHEDULE, "Removing schedule " + schedule_id)
