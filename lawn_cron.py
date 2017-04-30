@@ -74,6 +74,7 @@ def callback(ch, method, properties, body):
         duration = request["duration"] if "duration" in request else {}
         start_time = request["time"] if "time" in request else {}
         days = request["days"] if "days" in request else []
+        schedules = request["schedules"] if "schedules" in request else []
 
         if action == 'add':
             logger.debug(LAWN_CRON, "Adding :" + body)
@@ -94,6 +95,10 @@ def callback(ch, method, properties, body):
         elif action == "update":
             logger.debug(LAWN_CRON, "Updating: " + body)
             schedule.update(schedule_id, zone, duration, start_time, days)
+
+        elif action == "refresh":
+            logger.debug(LAWN_CRON, "Refreshing schedules.")
+            schedule.refresh(schedules)
 
 # Wait until the network is available
 while True:

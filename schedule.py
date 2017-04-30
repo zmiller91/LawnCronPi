@@ -73,3 +73,14 @@ def stop(schedule_id):
     schedule_channel.queue_declare(queue=schedule_id)
     schedule_channel.basic_publish(exchange='', routing_key=schedule_id, body=message)
     local_connection.close()
+
+
+def refresh(schedules):
+
+    logger.info(SCHEDULE, "Refreshing cron file")
+    cron_file.remove_all()
+    cron_file.write()
+    for schedule in schedules:
+        add(schedule["id"], schedule['zone'], schedule['duration'], schedule['time'], schedule['days'])
+
+
