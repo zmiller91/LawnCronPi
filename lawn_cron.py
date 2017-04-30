@@ -157,5 +157,5 @@ while True:
             logger.debug(LAWN_CRON, "Exception raised.")
             logger.debug(LAWN_CRON, sys.exc_info()[0])
 
-        time.sleep(15000)
+        time.sleep(15)
         continue
