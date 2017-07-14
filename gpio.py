@@ -1,13 +1,21 @@
 import RPi.GPIO as GPIO
 import logger
+import configuration
 
 GPIOLOG = "gpio.py"
 GPIO.setmode(GPIO.BOARD)
 
 
 def get_pin(zone):
-    return 11
 
+    pin = configuration.gpio_zone_map[4]
+    if zone not in configuration.gpio_zone_map:
+        logger.warn(GPIOLOG, "Zone {0} was not found, returning pin {1}".format(str(zone), str(pin)))
+        return pin
+
+    pin = configuration.gpio_zone_map[zone]
+    logger.info(GPIOLOG, "Returning pin {0} for zone {1}".format(str(pin), str(zone)))
+    return pin
 
 def setup(zone):
     pin = get_pin(zone)
