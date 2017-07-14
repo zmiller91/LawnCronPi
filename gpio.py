@@ -8,7 +8,7 @@ GPIO.setmode(GPIO.BOARD)
 
 def get_pin(zone):
 
-    pin = configuration.gpio_zone_map[4]
+    pin = configuration.gpio_zone_map['4']
     if zone not in configuration.gpio_zone_map:
         logger.warn(GPIOLOG, "Zone {0} was not found, returning pin {1}".format(str(zone), str(pin)))
         return pin
